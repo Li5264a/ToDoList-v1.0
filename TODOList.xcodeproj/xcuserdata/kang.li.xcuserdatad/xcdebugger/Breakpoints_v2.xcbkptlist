@@ -10,13 +10,13 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "TODOList/TaskListViewController.swift"
-            timestampString = "581240797.890044"
+            timestampString = "581263463.373963"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "129"
-            endingLineNumber = "129"
-            landmarkName = "TaskListViewController"
-            landmarkType = "3">
+            startingLineNumber = "127"
+            endingLineNumber = "127"
+            landmarkName = "configCell(cell:task:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -26,11 +26,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "TODOList/TaskListViewController.swift"
-            timestampString = "581240797.890187"
+            timestampString = "581263463.3743809"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "132"
-            endingLineNumber = "132"
+            startingLineNumber = "130"
+            endingLineNumber = "130"
             landmarkName = "configCell(cell:task:)"
             landmarkType = "7">
          </BreakpointContent>

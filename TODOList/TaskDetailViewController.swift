@@ -63,7 +63,6 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
                 if let name = textField.text {
                     taskDetailDelegate.taskDetailViewController(controller: self, didFinishAddTask: Task(name))
                 }
-                
             }
         }
         dismiss(animated: true, completion: nil)

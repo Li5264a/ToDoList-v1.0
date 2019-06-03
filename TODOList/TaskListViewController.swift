@@ -12,29 +12,15 @@ class TaskListViewController: UITableViewController,TaskDetailDelegate {
 
     var tasks = [Task]()
 
-    let addTask = "addTask"
-    let editTask = "editTask"
+    let addTaskString = "addTask"
+    let editTaskString = "editTask"
     
     override func viewDidLoad() {
         super.viewDidLoad()
-    
-        //TODO
-        let airplane = Task("飞机")
-        let car = Task("汽车")
-        let train = Task("火车")
-        
-        tasks.append(airplane)
-        tasks.append(car)
-        tasks.append(train)
-//        for i in 1...10{
-//            task1.name = "测试数据" + "\(i)"
-//            print("\(i)")
-//            tasks.append(task1)
-//        }
-    
+        //加载文件
+        loadTaskList()
     }
     
-
     //代理模式 代理addTaskViewController 实现此方法 进行值传递
     func taskDetailViewController(controller: TaskDetailViewController, didFinishAddTask task: Task) {
         //此时数据已经添加成功 但是tableview数据没有刷新
@@ -45,6 +31,8 @@ class TaskListViewController: UITableViewController,TaskDetailDelegate {
         self.tableView.beginUpdates()
         tableView.insertRows(at: [indexPath as IndexPath], with: .automatic)
         self.tableView.endUpdates()
+        //保存文件
+        saveTaskList()
         
         //简单粗暴 会重新加载下面两个函数
         //tableView.reloadData()
@@ -58,6 +46,7 @@ class TaskListViewController: UITableViewController,TaskDetailDelegate {
             let cell = tableView.cellForRow(at: indexPath as IndexPath) as! CustomCell
             configCell(cell: cell , task:task)
         }
+        saveTaskList()
     }
     
     //获取总条数
@@ -93,11 +82,14 @@ class TaskListViewController: UITableViewController,TaskDetailDelegate {
                 task.isCheck = true
             }
         }
+        saveTaskList()
     }
+    
     //不允许删除第一行
     override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
         return indexPath.row != 0
     }
+    
     //删除任务
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         self.tableView.beginUpdates()
@@ -110,17 +102,17 @@ class TaskListViewController: UITableViewController,TaskDetailDelegate {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         
         let navigationVC = segue.destination as! UINavigationController
-        let addTaskVC = navigationVC.topViewController as! TaskDetailViewController
+        let taskDetailVC = navigationVC.topViewController as! TaskDetailViewController
         
-        if segue.identifier == addTask {
-            addTaskVC.taskDetailDelegate = self
-        } else if segue.identifier == editTask {
-            addTaskVC.taskDetailDelegate = self
+        if segue.identifier == addTaskString {
+            taskDetailVC.taskDetailDelegate = self
+        } else if segue.identifier == editTaskString {
+            taskDetailVC.taskDetailDelegate = self
             let cell = sender as! UITableViewCell
             let indexPath = tableView.indexPath(for: cell)
             if let indexPath = indexPath {
                 let task = tasks[indexPath.row]
-                addTaskVC.taskToEdit = task
+                taskDetailVC.taskToEdit = task
             }
         }
     }
@@ -135,6 +127,40 @@ class TaskListViewController: UITableViewController,TaskDetailDelegate {
         }else{
             checkMarkLabel.text = ""
         }
+    }
+    
+    func dataFilePath() -> [String] {
+        let paths = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
+        let filePath = paths[0] as NSString
+        return filePath.strings(byAppendingPaths: ["TaskList.plist"])
+    }
+    
+    //将添加或修改的数据写入到文件中
+    func saveTaskList() {
+        //1.创建data对象 
+        let data = NSMutableData()
+        
+        //2.将数据写入到data对象中
+        let archiver = NSKeyedArchiver(forWritingWith: data)
+        archiver.encode(tasks, forKey: "TaskList")
+        archiver.finishEncoding()
+        
+        //3.将data对象写入到文件中
+        data.write(toFile: dataFilePath()[0], atomically: true)
+    }
+    
+    //从文件中读取数据
+    func loadTaskList() {
+        //1.创建data对象
+        let data = NSData(contentsOfMappedFile: dataFilePath()[0])
+        if let data = data{
+            //2.从data中转换成内存对象
+            let unarchiver = NSKeyedUnarchiver(forReadingWith: data as Data)
+            tasks = unarchiver.decodeObject(forKey: "TaskList") as! [Task]
+            unarchiver.finishDecoding()
+        }
+        
+        
     }
 }
 
