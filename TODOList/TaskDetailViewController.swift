@@ -56,12 +56,12 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
     //保存按钮
     @IBAction func save(_ sender: Any) {
         if let taskDetailDelegate = taskDetailDelegate {
-            if let taskToEdit = taskToEdit {
+            if var taskToEdit = taskToEdit {
                 taskToEdit.name = textField.text!
                 taskDetailDelegate.taskDetailViewController(controller: self, didFinishEditTask: taskToEdit)
             } else {
                 if let name = textField.text {
-                    taskDetailDelegate.taskDetailViewController(controller: self, didFinishAddTask: Task(name))
+                    taskDetailDelegate.taskDetailViewController(controller: self, didFinishAddTask: Task(name: name, isCheck: false))
                 }
             }
         }
@@ -72,22 +72,4 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
     @IBAction func cancel(_ sender: UIBarButtonItem) {
         dismiss(animated: true, completion: nil)
     }
-    
-//    //设置tableView的行 选中效果消失（背景色消失）
-//    override func tableView(_ tableView: UITableView, willSelectRowAt indexPath: IndexPath) -> IndexPath? {
-//        return nil
-//    }
-    
-//    //设置保存按钮在文本框中无文字时不可点击  使用代理模式完成
-//    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-//        let oldText = NSString (string: textField.text!)
-//        let newText = oldText.replacingCharacters(in: range, with: string) as NSString
-//
-//        if newText.length > 0 {
-//            saveButton.isEnabled = true
-//        }else {
-//            saveButton.isEnabled = false
-//        }
-//        return true
-//    }
 }

@@ -9,15 +9,14 @@
 import UIKit
 
 class TaskListViewController: UITableViewController,TaskDetailDelegate {
-
+    
     var tasks = [Task]()
-
+    
     let addTaskString = "addTask"
     let editTaskString = "editTask"
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        //加载文件
         loadTaskList()
     }
     
@@ -40,12 +39,7 @@ class TaskListViewController: UITableViewController,TaskDetailDelegate {
     
     
     func taskDetailViewController(controller: TaskDetailViewController, didFinishEditTask task: Task) {
-        let index = tasks.firstIndex(of: task)
-        if let index = index {
-            let indexPath = NSIndexPath(row: index, section: 0)
-            let cell = tableView.cellForRow(at: indexPath as IndexPath) as! CustomCell
-            configCell(cell: cell , task:task)
-        }
+        tableView.reloadData()
         saveTaskList()
     }
     
@@ -58,18 +52,18 @@ class TaskListViewController: UITableViewController,TaskDetailDelegate {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CustomCell", for: indexPath) as! CustomCell
         let task = tasks[indexPath.row]
-
+        
         configCell(cell: cell, task:task)
         return cell
     }
-
+    
     //判断是否选择
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         //找到被选中的这一行
         tableView.deselectRow(at: indexPath, animated: true)
         
-        let task = tasks[indexPath.row]
+        var task = tasks[indexPath.row]
         
         if let cell = tableView.cellForRow(at: indexPath){
             //找到Tag为1001的 Label
@@ -132,35 +126,32 @@ class TaskListViewController: UITableViewController,TaskDetailDelegate {
     func dataFilePath() -> [String] {
         let paths = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
         let filePath = paths[0] as NSString
-        return filePath.strings(byAppendingPaths: ["TaskList.plist"])
+        return filePath.strings(byAppendingPaths: ["TaskList.txt"])
     }
     
     //将添加或修改的数据写入到文件中
     func saveTaskList() {
-        //1.创建data对象 
-        let data = NSMutableData()
-        
-        //2.将数据写入到data对象中
-        let archiver = NSKeyedArchiver(forWritingWith: data)
-        archiver.encode(tasks, forKey: "TaskList")
-        archiver.finishEncoding()
-        
-        //3.将data对象写入到文件中
-        data.write(toFile: dataFilePath()[0], atomically: true)
+        do{
+            let jsonData = try JSONEncoder().encode(tasks)
+            let jsonString = String(decoding: jsonData, as: UTF8.self) as NSString
+            try jsonString.write(toFile: dataFilePath()[0], atomically: true, encoding: String.Encoding.utf8.rawValue)
+            print("写入数据成功")
+        }catch{
+            print(error.localizedDescription)
+        }
     }
     
     //从文件中读取数据
     func loadTaskList() {
-        //1.创建data对象
-        let data = NSData(contentsOfMappedFile: dataFilePath()[0])
-        if let data = data{
-            //2.从data中转换成内存对象
-            let unarchiver = NSKeyedUnarchiver(forReadingWith: data as Data)
-            tasks = unarchiver.decodeObject(forKey: "TaskList") as! [Task]
-            unarchiver.finishDecoding()
+        if let readData = try? String(contentsOfFile: dataFilePath()[0]).data(using: .utf8) {
+            do {
+                if let task = try? JSONDecoder().decode([Task].self,from: readData) {
+                    tasks.append(contentsOf: task)
+                }
+            } catch {
+                print(error.localizedDescription)
+            }
         }
-        
-        
     }
 }
 
