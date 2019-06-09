@@ -7,16 +7,17 @@
 //
 
 import UIKit
-
 class TaskListViewController: UITableViewController,TaskDetailDelegate {
     
     var tasks = [Task]()
+    var taskCategory: TaskCategory!
     
-    let addTaskString = "addTask"
-    let editTaskString = "editTask"
+    let addTaskSegueIdentifier = "addTask"
+    let editTaskSegueIdentifier = "editTask"
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.navigationItem.title = taskCategory.name
         loadTaskList()
     }
     
@@ -24,21 +25,14 @@ class TaskListViewController: UITableViewController,TaskDetailDelegate {
     func taskDetailViewController(controller: TaskDetailViewController, didFinishAddTask task: Task) {
         //此时数据已经添加成功 但是tableview数据没有刷新
         tasks.append(task)
-        
-        //将数据添加到特定的位置 只刷新需要刷新的部位
-        let indexPath = NSIndexPath(row: tasks.count - 1, section: 0)
-        self.tableView.beginUpdates()
-        tableView.insertRows(at: [indexPath as IndexPath], with: .automatic)
-        self.tableView.endUpdates()
+        tableView.reloadData()
         //保存文件
         saveTaskList()
-        
-        //简单粗暴 会重新加载下面两个函数
-        //tableView.reloadData()
     }
     
     
     func taskDetailViewController(controller: TaskDetailViewController, didFinishEditTask task: Task) {
+        tasks.append(task)
         tableView.reloadData()
         saveTaskList()
     }
@@ -52,7 +46,6 @@ class TaskListViewController: UITableViewController,TaskDetailDelegate {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CustomCell", for: indexPath) as! CustomCell
         let task = tasks[indexPath.row]
-        
         configCell(cell: cell, task:task)
         return cell
     }
@@ -90,23 +83,26 @@ class TaskListViewController: UITableViewController,TaskDetailDelegate {
         tasks.remove(at: indexPath.row)
         tableView.deleteRows(at: [indexPath], with: .automatic)
         self.tableView.endUpdates()
+        saveTaskList()
     }
     
-    //将 CheckListViewController对象 传递给 AddTaskViewController 因为navigationVC 目前只有一个ViewController 所以直接使用navigationVC.topViewController 就可以获取到
+    //将 TaskListViewController对象 传递给 TaskDetailViewController 因为navigationVC 目前只有一个ViewController 所以直接使用navigationVC.topViewController 就可以获取到
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         
         let navigationVC = segue.destination as! UINavigationController
         let taskDetailVC = navigationVC.topViewController as! TaskDetailViewController
         
-        if segue.identifier == addTaskString {
+        if segue.identifier == addTaskSegueIdentifier {
             taskDetailVC.taskDetailDelegate = self
-        } else if segue.identifier == editTaskString {
+        } else if segue.identifier == editTaskSegueIdentifier {
             taskDetailVC.taskDetailDelegate = self
             let cell = sender as! UITableViewCell
             let indexPath = tableView.indexPath(for: cell)
             if let indexPath = indexPath {
+                //将要修改的内容传递给修改页面，并将原内容删除
                 let task = tasks[indexPath.row]
                 taskDetailVC.taskToEdit = task
+                tasks.remove(at: indexPath.row)
             }
         }
     }
@@ -135,7 +131,6 @@ class TaskListViewController: UITableViewController,TaskDetailDelegate {
             let jsonData = try JSONEncoder().encode(tasks)
             let jsonString = String(decoding: jsonData, as: UTF8.self) as NSString
             try jsonString.write(toFile: dataFilePath()[0], atomically: true, encoding: String.Encoding.utf8.rawValue)
-            print("写入数据成功")
         }catch{
             print(error.localizedDescription)
         }

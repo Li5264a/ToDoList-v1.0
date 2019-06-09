@@ -7,7 +7,7 @@
 //
 
 import UIKit
-
+import Alamofire
 protocol TaskDetailDelegate: class {
     func taskDetailViewController(controller: TaskDetailViewController , didFinishAddTask task: Task)
     func taskDetailViewController(controller: TaskDetailViewController , didFinishEditTask task: Task)
@@ -15,8 +15,7 @@ protocol TaskDetailDelegate: class {
 
 class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
 
-    
-    @IBOutlet weak var textField: UITextField!
+    @IBOutlet weak var textView: UITextView!
     
     @IBOutlet weak var saveButton: UIBarButtonItem!
     //weak解决内存泄漏问题
@@ -26,21 +25,46 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        //加载textView配置方法
+        textViewConfig()
+        
         //设置保存按钮初始化不可见
         saveButton.isEnabled = false
         
-        //监听 saveButtonStatus 方法
-        NotificationCenter.default.addObserver(self, selector: #selector(self.saveButtonStatus(sender:)), name: UITextField.textDidChangeNotification, object: nil)
+        insertString("欢迎欢迎!")
+        insertImage(UIImage(named: "icon")!, mode:.fitTextLine)
         
+        //监听 saveButtonStatus 方法
+        NotificationCenter.default.addObserver(self, selector: #selector(self.saveButtonStatus(sender:)), name: UITextView.textDidChangeNotification, object: nil)
+        
+        //若选中编辑任务，将选中的内容显示到输入框中
         if let taskToEdit = taskToEdit {
-            self.textField.text = taskToEdit.name
+            self.textView.text = taskToEdit.name
             self.navigationItem.title = "编辑任务"
         }
+        
+//        AF.request("https://v.juhe.cn/weather/index", parameters: ["cityname": "西安","dtype": "json","format": "1","key":"ea22e4069a5398a36a31616eca5fccca"])
+//            .responseJSON { response in
+//                switch response.result{
+//                case .success:
+//                    //把得到的JSON数据转为数组
+//                    if let items = response.result.value as? NSArray{
+//                        //遍历数组得到每一个字典模型
+//                        for dict in items{
+//                            print(dict)
+//                        }
+//                    }
+//                case .failure:
+//                    print(response.result.error)
+//                }
+//        }
+        
     }
     
     //设置保存按钮在文本框中无文字时不可点击
     @objc func saveButtonStatus(sender: NSNotification){
-        if(!self.textField.text!.isEmpty) {
+        if(!self.textView.text!.isEmpty) {
             saveButton.isEnabled = true
         } else {
             saveButton.isEnabled = false
@@ -50,17 +74,33 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
     //使输入框首先响应 实现点击添加按钮之后跳转到添加任务界面自动选中输入框
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        textField.becomeFirstResponder()
+     //   textField.becomeFirstResponder()
+        textView.becomeFirstResponder()
+    }
+    
+    func textViewConfig() {
+        //设置内容是否可选
+        textView.isSelectable = true
+        //设置字体
+        textView.font = UIFont.boldSystemFont(ofSize: 20)
+        //设置字体颜色
+        textView.textColor = UIColor.gray
+        //设置对其方式
+        textView.textAlignment = NSTextAlignment.center
+        //给文本中所有的电话和网址自动添加链接
+        textView.dataDetectorTypes = UIDataDetectorTypes.all
     }
     
     //保存按钮
     @IBAction func save(_ sender: Any) {
         if let taskDetailDelegate = taskDetailDelegate {
             if var taskToEdit = taskToEdit {
-                taskToEdit.name = textField.text!
+            //    taskToEdit.name = textField.text!
+                taskToEdit.name = textView.text!
                 taskDetailDelegate.taskDetailViewController(controller: self, didFinishEditTask: taskToEdit)
             } else {
-                if let name = textField.text {
+                if let name = textView.text {
+                    print("------" + textView.text!)
                     taskDetailDelegate.taskDetailViewController(controller: self, didFinishAddTask: Task(name: name, isCheck: false))
                 }
             }
@@ -71,5 +111,70 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
     //取消按钮 返回上一页
     @IBAction func cancel(_ sender: UIBarButtonItem) {
         dismiss(animated: true, completion: nil)
+    }
+    
+    //插入的图片附件的尺寸样式
+    enum ImageAttachmentMode {
+        case `default`  //默认（不改变大小）
+        case fitTextLine  //使尺寸适应行高
+        case fitTextView  //使尺寸适应textView
+    }
+    
+    //插入文字
+    func insertString(_ text:String) {
+        //获取textView的所有文本，转成可变的文本
+        let mutableStr = NSMutableAttributedString(attributedString: textView.attributedText)
+        //获得目前光标的位置
+        let selectedRange = textView.selectedRange
+        //插入文字
+        let attStr = NSAttributedString(string: text)
+        mutableStr.insert(attStr, at: selectedRange.location)
+        
+        //设置可变文本的字体属性
+        mutableStr.addAttribute(NSAttributedString.Key.font, value: UIFont.systemFont(ofSize: 22),
+                                range: NSMakeRange(0,mutableStr.length))
+        //再次记住新的光标的位置
+        let newSelectedRange = NSMakeRange(selectedRange.location + attStr.length, 0)
+        
+        //重新给文本赋值
+        textView.attributedText = mutableStr
+        //恢复光标的位置（上面一句代码执行之后，光标会移到最后面）
+        textView.selectedRange = newSelectedRange
+    }
+    
+    func insertImage(_ image: UIImage, mode: ImageAttachmentMode = .default) {
+        let mutableStr = NSMutableAttributedString(attributedString: textView.attributedText)
+        
+        let imgAttachment = NSTextAttachment(data: nil, ofType: nil)
+        var imgAttachmentString: NSAttributedString
+        imgAttachment.image = image
+        
+        if mode == .fitTextLine {
+            imgAttachment.bounds = CGRect(x: 0, y: -4, width: textView.font!.lineHeight, height: textView.font!.lineHeight)
+        } else if mode == .fitTextView {
+            let imageWidth = textView.frame.width - 10
+            let imageHeight = image.size.height/image.size.width*imageWidth
+            imgAttachment.bounds = CGRect(x: 0, y: 0, width: imageWidth, height: imageHeight)
+        }
+        
+        imgAttachmentString = NSAttributedString(attachment: imgAttachment)
+        
+        //获得目前光标的位置
+        let selectedRange = textView.selectedRange
+        //插入文字
+        mutableStr.insert(imgAttachmentString, at: selectedRange.location)
+        //设置可变文本的字体属性
+        mutableStr.addAttribute(NSAttributedString.Key.font, value: UIFont.systemFont(ofSize: 22),
+                                range: NSMakeRange(0,mutableStr.length))
+        //再次记住新的光标的位置
+        let newSelectedRange = NSMakeRange(selectedRange.location+1, 0)
+        
+        //重新给文本赋值
+        textView.attributedText = mutableStr
+        //恢复光标的位置（上面一句代码执行之后，光标会移到最后面）
+        textView.selectedRange = newSelectedRange
+        //移动滚动条（确保光标在可视区域内）
+        self.textView.scrollRangeToVisible(newSelectedRange)
+        
     }
 }
