@@ -42,6 +42,7 @@
                                     </subviews>
                                 </tableViewCellContentView>
                                 <connections>
+                                    <outlet property="checkMarkLabel" destination="zaR-F3-BRq" id="MOv-zB-l2A"/>
                                     <outlet property="customLabel" destination="sbg-ZH-g9o" id="YiG-nt-s1M"/>
                                     <segue destination="0kL-F8-B5m" kind="presentation" identifier="editTask" trigger="accessoryAction" id="KPw-dB-bft"/>
                                 </connections>

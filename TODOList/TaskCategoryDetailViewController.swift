@@ -26,21 +26,20 @@ class TaskCategoryDetailViewController: UITableViewController {
         }
         super.viewDidLoad()
     }
+    
     @IBAction func save(_ sender: Any) {
         if var tc = taskCategoryToEdit {
             tc.name = textField.text!
             taskCategoryDetailDelegate?.taskCategoryDetailViewController(sender: self, didFinishEditTaskCategory: tc)
         } else {
-            let tc = TaskCategory(name: textField.text!)
-            taskCategoryDetailDelegate?.taskCategoryDetailViewController(sender: self, didFinishAddTaskCategory: tc)
+            if let name = textField.text {
+                taskCategoryDetailDelegate?.taskCategoryDetailViewController(sender: self, didFinishAddTaskCategory: TaskCategory(name: name))
+            }
         }
-       
         dismiss(animated: true, completion: nil)
     }
-    
     
     @IBAction func cancel(_ sender: Any) {
         dismiss(animated: true, completion: nil)
     }
-    
 }

@@ -22,6 +22,8 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
     weak var taskDetailDelegate: TaskDetailDelegate?
     
     var taskToEdit: Task?
+    
+    var taskCategory: TaskCategory?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,8 +34,8 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
         //设置保存按钮初始化不可见
         saveButton.isEnabled = false
         
-        insertString("欢迎欢迎!")
-        insertImage(UIImage(named: "icon")!, mode:.fitTextLine)
+       // insertString("欢迎欢迎!")
+       // insertImage(UIImage(named: "icon")!, mode:.fitTextLine)
         
         //监听 saveButtonStatus 方法
         NotificationCenter.default.addObserver(self, selector: #selector(self.saveButtonStatus(sender:)), name: UITextView.textDidChangeNotification, object: nil)
@@ -95,13 +97,11 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
     @IBAction func save(_ sender: Any) {
         if let taskDetailDelegate = taskDetailDelegate {
             if var taskToEdit = taskToEdit {
-            //    taskToEdit.name = textField.text!
                 taskToEdit.name = textView.text!
                 taskDetailDelegate.taskDetailViewController(controller: self, didFinishEditTask: taskToEdit)
             } else {
                 if let name = textView.text {
-                    print("------" + textView.text!)
-                    taskDetailDelegate.taskDetailViewController(controller: self, didFinishAddTask: Task(name: name, isCheck: false))
+                    taskDetailDelegate.taskDetailViewController(controller: self, didFinishAddTask: Task(name: name, isCheck: false, taskCategory: taskCategory!.name))
                 }
             }
         }
