@@ -17,7 +17,7 @@ import SwiftyJSON
     override func viewDidLoad() {
         super.viewDidLoad()
         loadTaskCategoryList()
-        loadTodayWeather()
+      //  loadTodayWeather()
     }
 
     func taskCategoryDetailViewController(sender: TaskCategoryDetailViewController, didFinishAddTaskCategory taskCategory: TaskCategory) {

@@ -19,6 +19,11 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
     @IBOutlet weak var textView: UITextView!
     
     @IBOutlet weak var saveButton: UIBarButtonItem!
+    
+    @IBOutlet weak var remindTimeField: UITextField!
+    
+    @IBOutlet weak var timeSwitch: UISwitch!
+    
     //weak解决内存泄漏问题
     weak var taskDetailDelegate: TaskDetailDelegate?
     
@@ -35,8 +40,8 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
         //设置保存按钮初始化不可见
         saveButton.isEnabled = false
         
-       // insertString("欢迎欢迎!")
-       // insertImage(UIImage(named: "icon")!, mode:.fitTextLine)
+      //  insertString("欢迎欢迎!")
+      //  insertImage(UIImage(named: "icon")!, mode:.fitTextLine)
         
         //监听 saveButtonStatus 方法
         NotificationCenter.default.addObserver(self, selector: #selector(self.saveButtonStatus(sender:)), name: UITextView.textDidChangeNotification, object: nil)
@@ -46,6 +51,7 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
             self.textView.text = taskToEdit.name
             self.navigationItem.title = "编辑任务"
         }
+        remindTime()
     }
     
     //设置保存按钮在文本框中无文字时不可点击
@@ -127,10 +133,13 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
     }
     
     func insertImage(_ image: UIImage, mode: ImageAttachmentMode = .default) {
+        //获取textview的所有文本，转化为可变文本
         let mutableStr = NSMutableAttributedString(attributedString: textView.attributedText)
         
+        //创建附件
         let imgAttachment = NSTextAttachment(data: nil, ofType: nil)
-        var imgAttachmentString: NSAttributedString
+    
+        //设置附件的照片
         imgAttachment.image = image
         
         if mode == .fitTextLine {
@@ -141,11 +150,14 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
             imgAttachment.bounds = CGRect(x: 0, y: 0, width: imageWidth, height: imageHeight)
         }
         
+        //创建NSAttributedString属性化文本
+        var imgAttachmentString: NSAttributedString
+        //将附件转化问此文本
         imgAttachmentString = NSAttributedString(attachment: imgAttachment)
         
         //获得目前光标的位置
         let selectedRange = textView.selectedRange
-        //插入文字
+        //插入图片
         mutableStr.insert(imgAttachmentString, at: selectedRange.location)
         //设置可变文本的字体属性
         mutableStr.addAttribute(NSAttributedString.Key.font, value: UIFont.systemFont(ofSize: 22),
@@ -159,6 +171,36 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
         textView.selectedRange = newSelectedRange
         //移动滚动条（确保光标在可视区域内）
         self.textView.scrollRangeToVisible(newSelectedRange)
+        
+    }
+    
+    func remindTime() {
+        timeSwitch.addTarget(self, action: #selector(switchDidChange), for:.valueChanged)
+        //创建日期选择器
+        let datePicker = UIDatePicker(frame: CGRect(x:0, y:0, width:320, height:216))
+        //将日期选择器区域设置为中文，则选择器日期显示为中文
+        datePicker.locale = Locale(identifier: "zh_CN")
+        remindTimeField.inputView = datePicker
+        datePicker.addTarget(self, action: #selector(dateChanged),
+                             for: .valueChanged)
+    }
+    
+    //日期选择器响应方法
+    @objc func dateChanged(datePicker : UIDatePicker){
+        //更新提醒时间文本框
+        let formatter = DateFormatter()
+        //日期样式
+        formatter.dateFormat = "yyyy年MM月dd日 HH:mm:ss"
+        remindTimeField.text = formatter.string(from: datePicker.date)
+    }
+    
+    //UISwitch监听方法
+    @objc func switchDidChange() {
+        if timeSwitch.isOn {
+            remindTimeField.isEnabled = true
+        } else {
+            remindTimeField.isEnabled = false
+        }
         
     }
 }
