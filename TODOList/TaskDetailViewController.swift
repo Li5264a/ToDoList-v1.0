@@ -8,6 +8,7 @@
 
 import UIKit
 import Alamofire
+import SwiftyJSON
 protocol TaskDetailDelegate: class {
     func taskDetailViewController(controller: TaskDetailViewController , didFinishAddTask task: Task)
     func taskDetailViewController(controller: TaskDetailViewController , didFinishEditTask task: Task)
@@ -45,23 +46,6 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
             self.textView.text = taskToEdit.name
             self.navigationItem.title = "编辑任务"
         }
-        
-//        AF.request("https://v.juhe.cn/weather/index", parameters: ["cityname": "西安","dtype": "json","format": "1","key":"ea22e4069a5398a36a31616eca5fccca"])
-//            .responseJSON { response in
-//                switch response.result{
-//                case .success:
-//                    //把得到的JSON数据转为数组
-//                    if let items = response.result.value as? NSArray{
-//                        //遍历数组得到每一个字典模型
-//                        for dict in items{
-//                            print(dict)
-//                        }
-//                    }
-//                case .failure:
-//                    print(response.result.error)
-//                }
-//        }
-        
     }
     
     //设置保存按钮在文本框中无文字时不可点击

@@ -7,6 +7,8 @@
 //
 
 import UIKit
+import Alamofire
+import SwiftyJSON
 
  class TaskCategoryViewController: UITableViewController,TaskCategoryDetailDelegate {
     
@@ -15,6 +17,7 @@ import UIKit
     override func viewDidLoad() {
         super.viewDidLoad()
         loadTaskCategoryList()
+        loadTodayWeather()
     }
 
     func taskCategoryDetailViewController(sender: TaskCategoryDetailViewController, didFinishAddTaskCategory taskCategory: TaskCategory) {
@@ -115,5 +118,44 @@ import UIKit
                 print(error.localizedDescription)
             }
         }
+    }
+    
+    //请求天气接口，获取数据并展示
+    func loadTodayWeather() {
+        var city: String = ""
+        var date: String = ""
+        var week: String = ""
+        var weather: String = ""
+        var wind: String = ""
+        AF.request("https://v.juhe.cn/weather/index", parameters: ["cityname": "西安","dtype": "json","format": "1","key":"ea22e4069a5398a36a31616eca5fccca"])
+            .responseJSON { response in
+                switch response.result{
+                case .success(let value):
+                    let json = JSON.init(value)
+                    city = json["result"]["today"]["city"].stringValue
+                    date = json["result"]["today"]["date_y"].stringValue
+                    week = json["result"]["today"]["week"].stringValue
+                    weather = json["result"]["today"]["weather"].stringValue
+                    wind = json["result"]["today"]["wind"].stringValue
+                    self.showWeather(city: city, date: date, week: week, weather: weather, wind: wind)
+                case .failure(let error):
+                    print(error)
+                }
+        }
+    }
+    
+    //显示天气数据
+    func showWeather(city: String, date: String, week: String, weather: String, wind: String) {
+        let result = city + " " + date + " " + week + " \n" + weather + " " + wind
+        let alert = UIAlertController(title: "天气", message: result, preferredStyle: .alert)
+        let cancel = UIAlertAction(title: "返回", style: .cancel, handler: nil)
+        let ok = UIAlertAction(title: "OK", style: .default, handler: {
+            ACTION in
+            print(result)
+        })
+
+        alert.addAction(cancel)
+        alert.addAction(ok)
+        self.present(alert, animated: true, completion: nil)
     }
 }

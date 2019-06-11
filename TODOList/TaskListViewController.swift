@@ -71,14 +71,12 @@ class TaskListViewController: UITableViewController,TaskDetailDelegate {
 //        let cell = tableView.dequeueReusableCell(withIdentifier: "CustomCell") as! CustomCell
 //        let checkMarkLabel = cell.checkMarkLabel!
 //
-//        if let cell = tableView.cellForRow(at: indexPath){
-//            if checkMarkLabel.text == "√"{
-//                checkMarkLabel.text = ""
-//                task.isCheck = false
-//            }else{
-//                checkMarkLabel.text = "√"
-//                task.isCheck = true
-//            }
+//        if checkMarkLabel.text == "√"{
+//             checkMarkLabel.text = ""
+//             task.isCheck = false
+//        }else{
+//             checkMarkLabel.text = "√"
+//             task.isCheck = true
 //        }
         if let cell = tableView.cellForRow(at: indexPath){
             //找到Tag为1001的 Label
