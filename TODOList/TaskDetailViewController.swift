@@ -9,6 +9,7 @@
 import UIKit
 import Alamofire
 import SwiftyJSON
+import UserNotifications
 protocol TaskDetailDelegate: class {
     func taskDetailViewController(controller: TaskDetailViewController , didFinishAddTask task: Task)
     func taskDetailViewController(controller: TaskDetailViewController , didFinishEditTask task: Task)
@@ -30,6 +31,8 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
     var taskToEdit: Task?
     
     var taskCategory: TaskCategory?
+    
+    var components = DateComponents()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -49,9 +52,12 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
         //若选中编辑任务，将选中的内容显示到输入框中
         if let taskToEdit = taskToEdit {
             self.textView.text = taskToEdit.name
+            self.remindTimeField.text = taskToEdit.remindTime
             self.navigationItem.title = "编辑任务"
         }
+        //调用设置提醒时间功能
         remindTime()
+       // remindTask()
     }
     
     //设置保存按钮在文本框中无文字时不可点击
@@ -88,10 +94,11 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
         if let taskDetailDelegate = taskDetailDelegate {
             if var taskToEdit = taskToEdit {
                 taskToEdit.name = textView.text!
+                taskToEdit.remindTime = remindTimeField.text!
                 taskDetailDelegate.taskDetailViewController(controller: self, didFinishEditTask: taskToEdit)
             } else {
-                if let name = textView.text {
-                    taskDetailDelegate.taskDetailViewController(controller: self, didFinishAddTask: Task(name: name, isCheck: false, taskCategory: taskCategory!.name))
+                if let name = textView.text, let time = remindTimeField.text {
+                    taskDetailDelegate.taskDetailViewController(controller: self, didFinishAddTask: Task(name: name, isCheck: false, taskCategory: taskCategory!.name, remindTime: time))
                 }
             }
         }
@@ -174,6 +181,7 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
         
     }
     
+    //设置提醒时间
     func remindTime() {
         timeSwitch.addTarget(self, action: #selector(switchDidChange), for:.valueChanged)
         //创建日期选择器
@@ -190,8 +198,13 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
         //更新提醒时间文本框
         let formatter = DateFormatter()
         //日期样式
-        formatter.dateFormat = "yyyy年MM月dd日 HH:mm:ss"
+        formatter.dateFormat = "yyyy年MM月dd日 HH:mm"
         remindTimeField.text = formatter.string(from: datePicker.date)
+        
+        //获取当前的Calendar(用于作为转换Date和DateComponents的桥梁)
+    //    let calendar = Calendar.current
+        //使用（时区+时间）重载函数进行转换（这里参数in使用TimeZone的构造器创建了一个东八区的时区）
+     //   components = calendar.dateComponents(in: TimeZone.init(secondsFromGMT: 3600*8)!, from: datePicker.date)
     }
     
     //UISwitch监听方法
@@ -202,5 +215,36 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
             remindTimeField.isEnabled = false
         }
         
+    }
+    
+    func remindTask() {
+        //设置推送内容
+        let content = UNMutableNotificationContent()
+        content.title = "任务提醒"
+        content.body = taskToEdit!.name
+        
+        components.year = 2019
+        components.month = 06
+        components.day = 12
+        components.hour = 13
+        components.minute = 26
+        
+        //设置通知触发器
+        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+
+        
+        //设置请求标识符
+        let requestIdentifier = "com.hangge.testNotification"
+        
+        //设置一个通知请求
+        let request = UNNotificationRequest(identifier: requestIdentifier,
+                                            content: content, trigger: trigger)
+        
+        //将通知请求添加到发送中心
+        UNUserNotificationCenter.current().add(request) { error in
+            if error == nil {
+                print("Time Interval Notification scheduled: \(requestIdentifier)")
+            }
+        }
     }
 }

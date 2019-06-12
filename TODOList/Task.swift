@@ -12,4 +12,5 @@ struct Task: Codable{
     var name: String = "No Name"
     var isCheck: Bool = false
     var taskCategory = "娱乐"
+    var remindTime = ""
 }
