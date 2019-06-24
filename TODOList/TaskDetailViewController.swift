@@ -11,8 +11,8 @@ import Alamofire
 import SwiftyJSON
 import UserNotifications
 protocol TaskDetailDelegate: class {
-    func taskDetailViewController(controller: TaskDetailViewController , didFinishAddTask task: Task)
-    func taskDetailViewController(controller: TaskDetailViewController , didFinishEditTask task: Task)
+    func taskDetailAdd(didFinishAddTask task: Task)
+    func taskDetailEdit(didFinishEditTask task: Task, shouldDeleteTask oldTask: Task)
 }
 
 class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
@@ -43,9 +43,6 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
         //设置保存按钮初始化不可见
         saveButton.isEnabled = false
         
-      //  insertString("欢迎欢迎!")
-      //  insertImage(UIImage(named: "icon")!, mode:.fitTextLine)
-        
         //监听 saveButtonStatus 方法
         NotificationCenter.default.addObserver(self, selector: #selector(self.saveButtonStatus(sender:)), name: UITextView.textDidChangeNotification, object: nil)
         
@@ -72,7 +69,6 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
     //使输入框首先响应 实现点击添加按钮之后跳转到添加任务界面自动选中输入框
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-     //   textField.becomeFirstResponder()
         textView.becomeFirstResponder()
     }
     
@@ -93,12 +89,13 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
     @IBAction func save(_ sender: Any) {
         if let taskDetailDelegate = taskDetailDelegate {
             if var taskToEdit = taskToEdit {
+                let oldTask = taskToEdit
                 taskToEdit.name = textView.text!
                 taskToEdit.remindTime = remindTimeField.text!
-                taskDetailDelegate.taskDetailViewController(controller: self, didFinishEditTask: taskToEdit)
+                taskDetailDelegate.taskDetailEdit(didFinishEditTask: taskToEdit, shouldDeleteTask: oldTask)
             } else {
                 if let name = textView.text, let time = remindTimeField.text {
-                    taskDetailDelegate.taskDetailViewController(controller: self, didFinishAddTask: Task(name: name, isCheck: false, taskCategory: taskCategory!.name, remindTime: time))
+                    taskDetailDelegate.taskDetailAdd(didFinishAddTask: Task(name: name, isCheck: false, taskCategory: taskCategory!.name, remindTime: time))
                 }
             }
         }
@@ -109,7 +106,9 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
     @IBAction func cancel(_ sender: UIBarButtonItem) {
         dismiss(animated: true, completion: nil)
     }
-    
+}
+
+extension TaskDetailViewController {
     //插入的图片附件的尺寸样式
     enum ImageAttachmentMode {
         case `default`  //默认（不改变大小）
@@ -145,7 +144,7 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
         
         //创建附件
         let imgAttachment = NSTextAttachment(data: nil, ofType: nil)
-    
+        
         //设置附件的照片
         imgAttachment.image = image
         
@@ -180,7 +179,9 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
         self.textView.scrollRangeToVisible(newSelectedRange)
         
     }
-    
+}
+
+extension TaskDetailViewController {
     //设置提醒时间
     func remindTime() {
         timeSwitch.addTarget(self, action: #selector(switchDidChange), for:.valueChanged)
@@ -202,9 +203,9 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
         remindTimeField.text = formatter.string(from: datePicker.date)
         
         //获取当前的Calendar(用于作为转换Date和DateComponents的桥梁)
-    //    let calendar = Calendar.current
+        //    let calendar = Calendar.current
         //使用（时区+时间）重载函数进行转换（这里参数in使用TimeZone的构造器创建了一个东八区的时区）
-     //   components = calendar.dateComponents(in: TimeZone.init(secondsFromGMT: 3600*8)!, from: datePicker.date)
+        //   components = calendar.dateComponents(in: TimeZone.init(secondsFromGMT: 3600*8)!, from: datePicker.date)
     }
     
     //UISwitch监听方法
@@ -231,7 +232,7 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
         
         //设置通知触发器
         let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
-
+        
         
         //设置请求标识符
         let requestIdentifier = "com.hangge.testNotification"

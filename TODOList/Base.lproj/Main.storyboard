@@ -180,7 +180,7 @@
         <!--任务分类-->
         <scene sceneID="Jqq-d8-xKt">
             <objects>
-                <tableViewController storyboardIdentifier="taskCategoryVC" title="任务分类" id="n4V-Bw-DNw" customClass="TaskCategoryViewController" customModule="TODOList" customModuleProvider="target" sceneMemberID="viewController">
+                <tableViewController storyboardIdentifier="taskCategoryVC" title="任务分类" id="n4V-Bw-DNw" customClass="TaskCategoryListViewController" customModule="TODOList" customModuleProvider="target" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" id="8pf-rL-0BN">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -224,7 +224,7 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <textField opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="0mh-hL-9w7">
-                                                    <rect key="frame" x="0.0" y="6" width="414" height="30"/>
+                                                    <rect key="frame" x="20" y="6" width="374" height="30"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                                     <nil key="textColor"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="14"/>
@@ -259,6 +259,7 @@
                     </navigationItem>
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                     <connections>
+                        <outlet property="saveButton" destination="Dta-r1-gLc" id="Shz-6n-e8u"/>
                         <outlet property="textField" destination="0mh-hL-9w7" id="VrW-Da-BUc"/>
                     </connections>
                 </tableViewController>
@@ -304,6 +305,6 @@
         </scene>
     </scenes>
     <inferredMetricsTieBreakers>
-        <segue reference="N9g-2U-q3F"/>
+        <segue reference="KPw-dB-bft"/>
     </inferredMetricsTieBreakers>
 </document>

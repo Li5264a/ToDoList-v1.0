@@ -16,7 +16,7 @@
 		D8441CC822A8F97100D19BA1 /* SwiftyJSON.framework.dSYM in CopyFiles */ = {isa = PBXBuildFile; fileRef = D8441CC722A8F97100D19BA1 /* SwiftyJSON.framework.dSYM */; };
 		D8441CE222A8FE9600D19BA1 /* Alamofire.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8441CD522A8FE6B00D19BA1 /* Alamofire.framework */; };
 		D8441CE322A8FE9600D19BA1 /* Alamofire.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D8441CD522A8FE6B00D19BA1 /* Alamofire.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		D8E8934A22ABB3500002938C /* TaskCategoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E8934922ABB3500002938C /* TaskCategoryViewController.swift */; };
+		D8E8934A22ABB3500002938C /* TaskCategoryListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E8934922ABB3500002938C /* TaskCategoryListViewController.swift */; };
 		D8F16C6722A021CC0038D1B8 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F16C6622A021CC0038D1B8 /* AppDelegate.swift */; };
 		D8F16C6922A021CC0038D1B8 /* TaskListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F16C6822A021CC0038D1B8 /* TaskListViewController.swift */; };
 		D8F16C6C22A021CC0038D1B8 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D8F16C6A22A021CC0038D1B8 /* Main.storyboard */; };
@@ -134,7 +134,7 @@
 		D8441CC322A8F8BA00D19BA1 /* SwiftyJSON.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftyJSON.framework; path = Carthage/Build/iOS/SwiftyJSON.framework; sourceTree = "<group>"; };
 		D8441CC722A8F97100D19BA1 /* SwiftyJSON.framework.dSYM */ = {isa = PBXFileReference; lastKnownFileType = wrapper.dsym; name = SwiftyJSON.framework.dSYM; path = Carthage/Build/iOS/SwiftyJSON.framework.dSYM; sourceTree = "<group>"; };
 		D8441CC922A8FE6B00D19BA1 /* Alamofire.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Alamofire.xcodeproj; path = "../../../Downloads/Alamofire-master/Alamofire.xcodeproj"; sourceTree = "<group>"; };
-		D8E8934922ABB3500002938C /* TaskCategoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskCategoryViewController.swift; sourceTree = "<group>"; };
+		D8E8934922ABB3500002938C /* TaskCategoryListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskCategoryListViewController.swift; sourceTree = "<group>"; };
 		D8F16C6322A021CC0038D1B8 /* TODOList.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TODOList.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D8F16C6622A021CC0038D1B8 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D8F16C6822A021CC0038D1B8 /* TaskListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskListViewController.swift; sourceTree = "<group>"; };
@@ -231,7 +231,7 @@
 				D83845C522A0C3BD00BA6B4D /* TaskDetailViewController.swift */,
 				D8F16C6A22A021CC0038D1B8 /* Main.storyboard */,
 				D824735922AD143000DCD873 /* TaskCategoryDetailViewController.swift */,
-				D8E8934922ABB3500002938C /* TaskCategoryViewController.swift */,
+				D8E8934922ABB3500002938C /* TaskCategoryListViewController.swift */,
 				D8F16C9622A02FA30038D1B8 /* Task.swift */,
 				D824735722AD03C100DCD873 /* TaskCategory.swift */,
 				D8F16C9422A026B50038D1B8 /* CustomCell.swift */,
@@ -485,7 +485,7 @@
 				D8F16C6722A021CC0038D1B8 /* AppDelegate.swift in Sources */,
 				D824735A22AD143000DCD873 /* TaskCategoryDetailViewController.swift in Sources */,
 				D8F16C9722A02FA30038D1B8 /* Task.swift in Sources */,
-				D8E8934A22ABB3500002938C /* TaskCategoryViewController.swift in Sources */,
+				D8E8934A22ABB3500002938C /* TaskCategoryListViewController.swift in Sources */,
 				D83845C622A0C3BD00BA6B4D /* TaskDetailViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

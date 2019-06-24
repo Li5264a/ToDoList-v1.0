@@ -7,7 +7,7 @@
 //
 
 import UIKit
-class TaskListViewController: UITableViewController,TaskDetailDelegate {
+class TaskListViewController: UITableViewController {
     
     var tasks = [Task]()
     var dataSource = [Task]()
@@ -18,6 +18,7 @@ class TaskListViewController: UITableViewController,TaskDetailDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        //FIXME
         self.navigationItem.title = taskCategory.name
         loadTaskList()
         taskByCategory(taskCategory: taskCategory)
@@ -31,102 +32,32 @@ class TaskListViewController: UITableViewController,TaskDetailDelegate {
         }
     }
     
-    //代理模式 代理addTaskViewController 实现此方法 进行值传递
-    func taskDetailViewController(controller: TaskDetailViewController, didFinishAddTask task: Task) {
-        //此时数据已经添加成功 但是tableview数据没有刷新
-        tasks.append(task)
-        dataSource.append(task)
-        tableView.reloadData()
-        //保存文件
-        saveTaskList()
-    }
-    
-    func taskDetailViewController(controller: TaskDetailViewController, didFinishEditTask task: Task) {
-        tasks.append(task)
-        dataSource.append(task)
-        tableView.reloadData()
-        saveTaskList()
-    }
-    
-    //获取总条数
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return dataSource.count
-    }
-    
-    //获取每条的内容并显示   IndexPath 两个属性 row and section
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "CustomCell", for: indexPath) as! CustomCell
-        let task = dataSource[indexPath.row]
-        configCell(cell: cell, task:task)
-        return cell
-    }
-    
-    //判断是否选择
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        
-        //取消选中效果
-        tableView.deselectRow(at: indexPath, animated: true)
-        
-        var task = dataSource[indexPath.row]
-//        let cell = tableView.dequeueReusableCell(withIdentifier: "CustomCell") as! CustomCell
-//        let checkMarkLabel = cell.checkMarkLabel!
-//
-//        if checkMarkLabel.text == "√"{
-//             checkMarkLabel.text = ""
-//             task.isCheck = false
-//        }else{
-//             checkMarkLabel.text = "√"
-//             task.isCheck = true
-//        }
-        if let cell = tableView.cellForRow(at: indexPath){
-            //找到Tag为1001的 Label
-            let checkMarkLabel = cell.viewWithTag(1001) as! UILabel
-            if checkMarkLabel.text == "√"{
-                checkMarkLabel.text = ""
-                task.isCheck = false
-            }else{
-                checkMarkLabel.text = "√"
-                task.isCheck = true
-            }
+    func deleteDataFromTasks(task: Task) {
+        let checkIndex = tasks.firstIndex(where: { (item) -> Bool in
+              task.name == item.name
+        })
+        guard let index = checkIndex else {
+            return
         }
-        saveTaskList()
-    }
-    
-    //不允许删除第一行
-    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        return indexPath.row != 0
-    }
-    
-    func deleteDataFromTasks(task: Task) -> Int{
-        var num = 0
-        var index = 0
-        for data in tasks {
-            if data.name == task.name {
-                index = num
-            }
-            num += 1
-        }
-        return index
-    }
-    
-    //删除任务
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
-        self.tableView.beginUpdates()
-        tableView.reloadData()
-        let task = dataSource[indexPath.row]
-        let index = deleteDataFromTasks(task: task)
         tasks.remove(at: index)
-        dataSource.remove(at: indexPath.row)
-        tableView.deleteRows(at: [indexPath], with: .automatic)
-        self.tableView.endUpdates()
-        saveTaskList()
+    }
+    
+    func deleteDataFromDataSource(task: Task) {
+        let checkIndex = dataSource.firstIndex(where: { (item) -> Bool in
+            task.name == item.name
+        })
+        guard let index = checkIndex else {
+            return
+        }
+        dataSource.remove(at: index)
     }
     
     //将 TaskListViewController对象 传递给 TaskDetailViewController 因为navigationVC 目前只有一个ViewController 所以直接使用navigationVC.topViewController 就可以获取到
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         
         let navigationVC = segue.destination as! UINavigationController
-        let taskDetailVC = navigationVC.topViewController as! TaskDetailViewController
+        let taskDetailVC = navigationVC.visibleViewController as! TaskDetailViewController
+        
         taskDetailVC.taskCategory = taskCategory
         if segue.identifier == addTaskSegueIdentifier {
             taskDetailVC.taskDetailDelegate = self
@@ -135,28 +66,14 @@ class TaskListViewController: UITableViewController,TaskDetailDelegate {
             let cell = sender as! UITableViewCell
             let indexPath = tableView.indexPath(for: cell)
             if let indexPath = indexPath {
-                //将要修改的内容传递给修改页面，并将原内容删除
+                //将要修改的内容传递给修改页面
                 let task = dataSource[indexPath.row]
                 taskDetailVC.taskToEdit = task
-                dataSource.remove(at: indexPath.row)
-                let index = deleteDataFromTasks(task: task)
-                tasks.remove(at: index)
             }
         }
     }
     
-    func configCell(cell: CustomCell, task: Task) {
-        cell.customLabel.text = task.name
-        cell.customLabel.textColor = UIColor.red
-        
-        let checkMarkLabel = cell.checkMarkLabel!
-        if task.isCheck {
-            checkMarkLabel.text = "√"
-        }else{
-            checkMarkLabel.text = ""
-        }
-    }
-    
+    //获取保存路径
     func dataFilePath() -> [String] {
         let paths = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
         let filePath = paths[0] as NSString
@@ -186,6 +103,89 @@ class TaskListViewController: UITableViewController,TaskDetailDelegate {
                 print(error.localizedDescription)
             }
         }
+    }
+}
+
+extension TaskListViewController {
+    //获取总条数
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return dataSource.count
+    }
+    
+    //获取每条的内容并显示   IndexPath 两个属性 row and section
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "CustomCell", for: indexPath) as! CustomCell
+        let task = dataSource[indexPath.row]
+        configCell(cell: cell, task:task)
+        return cell
+    }
+    
+    //判断是否选择
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        //取消选中效果
+        tableView.deselectRow(at: indexPath, animated: true)
+        checkOrUncheckTask(indexPath.row)
+        tableView.reloadData()
+        saveTaskList()
+    }
+    
+    //不允许删除第一行
+    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+        return indexPath.row != 0
+    }
+    
+    //删除任务
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        self.tableView.beginUpdates()
+        tableView.reloadData()
+        let task = dataSource[indexPath.row]
+        deleteDataFromTasks(task: task)
+        deleteDataFromDataSource(task: task)
+        tableView.deleteRows(at: [indexPath], with: .automatic)
+        self.tableView.endUpdates()
+        saveTaskList()
+    }
+    
+    func checkOrUncheckTask(_ index: Int) {
+        if dataSource[index].isCheck {
+            dataSource[index].isCheck = false
+        } else {
+            dataSource[index].isCheck = true
+        }
+    }
+    
+    func configCell(cell: CustomCell, task: Task) {
+        cell.customLabel.text = task.name
+        cell.customLabel.textColor = UIColor.red
+        
+        if task.isCheck {
+            cell.checkMarkLabel.text = "√"
+        }else{
+            cell.checkMarkLabel.text = ""
+        }
+    }
+}
+
+extension TaskListViewController: TaskDetailDelegate {
+    
+    //代理模式 代理addTaskViewController 实现此方法 进行值传递
+
+    func taskDetailAdd(didFinishAddTask task: Task) {
+        //此时数据已经添加成功 但是tableview数据没有刷新
+        tasks.append(task)
+        dataSource.append(task)
+        tableView.reloadData()
+        //保存文件
+        saveTaskList()
+    }
+    
+    func taskDetailEdit(didFinishEditTask task: Task, shouldDeleteTask oldTask: Task) {
+        deleteDataFromDataSource(task: oldTask)
+        deleteDataFromTasks(task: oldTask)
+        tasks.append(task)
+        dataSource.append(task)
+        tableView.reloadData()
+        saveTaskList()
     }
 }
 
