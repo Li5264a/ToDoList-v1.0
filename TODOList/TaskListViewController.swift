@@ -22,6 +22,8 @@ class TaskListViewController: UITableViewController {
         self.navigationItem.title = taskCategory.name
         loadTaskList()
         taskByCategory(taskCategory: taskCategory)
+        tableView.estimatedRowHeight = 60
+        tableView.rowHeight = UITableView.automaticDimension
     }
     
     func taskByCategory(taskCategory: TaskCategory) {
@@ -125,8 +127,9 @@ extension TaskListViewController {
         //取消选中效果
         tableView.deselectRow(at: indexPath, animated: true)
         checkOrUncheckTask(indexPath.row)
-        tableView.reloadData()
         saveTaskList()
+        tableView.reloadData()
+        
     }
     
     //不允许删除第一行
@@ -147,10 +150,26 @@ extension TaskListViewController {
     }
     
     func checkOrUncheckTask(_ index: Int) {
+        let task = dataSource[index]
+        isCheckedFromTasks(task: task)
         if dataSource[index].isCheck {
             dataSource[index].isCheck = false
         } else {
             dataSource[index].isCheck = true
+        }
+    }
+    
+    func isCheckedFromTasks(task: Task) {
+        let checkIndex = tasks.firstIndex(where: { (item) -> Bool in
+            task.name == item.name
+        })
+        guard let index = checkIndex else {
+            return
+        }
+        if tasks[index].isCheck {
+            tasks[index].isCheck = false
+        } else {
+            tasks[index].isCheck = true
         }
     }
     

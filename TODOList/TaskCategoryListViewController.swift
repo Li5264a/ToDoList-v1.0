@@ -63,21 +63,16 @@ import SwiftyJSON
     
     //请求天气接口，获取数据并展示
     func loadTodayWeather() {
-        var city: String = ""
-        var date: String = ""
-        var week: String = ""
-        var weather: String = ""
-        var wind: String = ""
         AF.request("https://v.juhe.cn/weather/index", parameters: ["cityname": "西安","dtype": "json","format": "1","key":"ea22e4069a5398a36a31616eca5fccca"])
             .responseJSON { response in
                 switch response.result{
                 case .success(let value):
                     let json = JSON.init(value)
-                    city = json["result"]["today"]["city"].stringValue
-                    date = json["result"]["today"]["date_y"].stringValue
-                    week = json["result"]["today"]["week"].stringValue
-                    weather = json["result"]["today"]["weather"].stringValue
-                    wind = json["result"]["today"]["wind"].stringValue
+                    let city = json["result"]["today"]["city"].stringValue
+                    let date = json["result"]["today"]["date_y"].stringValue
+                    let week = json["result"]["today"]["week"].stringValue
+                    let weather = json["result"]["today"]["weather"].stringValue
+                    let wind = json["result"]["today"]["wind"].stringValue
                     self.showWeather(city: city, date: date, week: week, weather: weather, wind: wind)
                 case .failure(let error):
                     print(error)
@@ -155,7 +150,7 @@ import SwiftyJSON
             taskListVC.taskCategory = (sender as! TaskCategory)
         } else if segue.identifier == "addTaskCategory" {
             let navigation = segue.destination as! UINavigationController
-            let tcDetail = navigation.topViewController as! TaskCategoryDetailViewController
+            let tcDetail = navigation.visibleViewController as! TaskCategoryDetailViewController
             tcDetail.taskCategoryDetailDelegate = self
         }
     }

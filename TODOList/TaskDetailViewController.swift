@@ -45,6 +45,7 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
         
         //监听 saveButtonStatus 方法
         NotificationCenter.default.addObserver(self, selector: #selector(self.saveButtonStatus(sender:)), name: UITextView.textDidChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(self.saveButtonStatus(sender:)), name: UITextField.textDidBeginEditingNotification, object: nil)
         
         //若选中编辑任务，将选中的内容显示到输入框中
         if let taskToEdit = taskToEdit {
@@ -54,12 +55,11 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
         }
         //调用设置提醒时间功能
         remindTime()
-       // remindTask()
     }
     
     //设置保存按钮在文本框中无文字时不可点击
     @objc func saveButtonStatus(sender: NSNotification){
-        if(!self.textView.text!.isEmpty) {
+        if(!self.textView.text!.isEmpty || !self.remindTimeField.text!.isEmpty) {
             saveButton.isEnabled = true
         } else {
             saveButton.isEnabled = false
@@ -99,6 +99,11 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
                 }
             }
         }
+        
+        if timeSwitch.isOn {
+            remindTask()
+        }
+        
         dismiss(animated: true, completion: nil)
     }
     
@@ -203,9 +208,9 @@ extension TaskDetailViewController {
         remindTimeField.text = formatter.string(from: datePicker.date)
         
         //获取当前的Calendar(用于作为转换Date和DateComponents的桥梁)
-        //    let calendar = Calendar.current
-        //使用（时区+时间）重载函数进行转换（这里参数in使用TimeZone的构造器创建了一个东八区的时区）
-        //   components = calendar.dateComponents(in: TimeZone.init(secondsFromGMT: 3600*8)!, from: datePicker.date)
+        let calendar = Calendar.current
+        
+        components = calendar.dateComponents([Calendar.Component.year,Calendar.Component.month,Calendar.Component.day,Calendar.Component.hour,Calendar.Component.minute], from: datePicker.date)
     }
     
     //UISwitch监听方法
@@ -215,32 +220,20 @@ extension TaskDetailViewController {
         } else {
             remindTimeField.isEnabled = false
         }
-        
     }
     
     func remindTask() {
         //设置推送内容
         let content = UNMutableNotificationContent()
         content.title = "任务提醒"
-        content.body = taskToEdit!.name
-        
-        components.year = 2019
-        components.month = 06
-        components.day = 12
-        components.hour = 13
-        components.minute = 26
-        
+        content.body = textView.text
         //设置通知触发器
         let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
-        
-        
         //设置请求标识符
-        let requestIdentifier = "com.hangge.testNotification"
-        
+        let requestIdentifier = textView.text!
         //设置一个通知请求
         let request = UNNotificationRequest(identifier: requestIdentifier,
                                             content: content, trigger: trigger)
-        
         //将通知请求添加到发送中心
         UNUserNotificationCenter.current().add(request) { error in
             if error == nil {
