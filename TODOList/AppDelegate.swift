@@ -14,16 +14,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
-
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
-        UNUserNotificationCenter.current()
-            .requestAuthorization(options: [.alert, .sound, .badge]) {
-                (accepted, error) in
-                if !accepted {
-                    print("用户不允许消息通知。")
-                }
-        }
+
+        setUpWindowAndRootView()
+        
         return true
     }
 
@@ -49,6 +43,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     }
 
-
 }
 
+extension AppDelegate {
+    
+    func setUpWindowAndRootView() {
+        window = UIWindow(frame: UIScreen.main.bounds)
+        window!.backgroundColor = UIColor.white
+        window!.makeKeyAndVisible()
+        
+        let adVC = AdViewController()
+        adVC.completion = {
+            let vc = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "taskNavigationController") as! TaskNavigationController
+            vc.adView = adVC.view
+            self.window!.rootViewController = vc
+        }
+        window!.rootViewController = adVC
+    }
+}
