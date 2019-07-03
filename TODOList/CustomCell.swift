@@ -12,12 +12,14 @@ class CustomCell: UITableViewCell {
 
     @IBOutlet weak var customLabel: UILabel!
     
+    @IBOutlet weak var checkMarkLabel: UILabel!
+    
     override func awakeFromNib() {
         super.awakeFromNib()
     }
 
     override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
-    }
+    } 
 
 }

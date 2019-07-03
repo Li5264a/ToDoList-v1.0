@@ -8,11 +8,9 @@
 
 import UIKit
 
-class Task: NSObject {
+struct Task: Codable{
     var name: String = "No Name"
     var isCheck: Bool = false
-
-    init(_ name: String) {
-        self.name = name
-    }
+    var taskCategory = "娱乐"
+    var remindTime = ""
 }

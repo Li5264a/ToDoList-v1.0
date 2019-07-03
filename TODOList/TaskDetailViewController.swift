@@ -7,40 +7,59 @@
 //
 
 import UIKit
-
+import Alamofire
+import SwiftyJSON
+import UserNotifications
 protocol TaskDetailDelegate: class {
-    func taskDetailViewController(controller: TaskDetailViewController , didFinishAddTask task: Task)
-    func taskDetailViewController(controller: TaskDetailViewController , didFinishEditTask task: Task)
+    func taskDetailAdd(didFinishAddTask task: Task)
+    func taskDetailEdit(didFinishEditTask task: Task, shouldDeleteTask oldTask: Task)
 }
 
 class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
 
-    
-    @IBOutlet weak var textField: UITextField!
+    @IBOutlet weak var textView: UITextView!
     
     @IBOutlet weak var saveButton: UIBarButtonItem!
+    
+    @IBOutlet weak var remindTimeField: UITextField!
+    
+    @IBOutlet weak var timeSwitch: UISwitch!
+    
     //weak解决内存泄漏问题
     weak var taskDetailDelegate: TaskDetailDelegate?
     
     var taskToEdit: Task?
+    
+    var taskCategory: TaskCategory?
+    
+    var components = DateComponents()
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        //加载textView配置方法
+        textViewConfig()
+        
         //设置保存按钮初始化不可见
         saveButton.isEnabled = false
         
         //监听 saveButtonStatus 方法
-        NotificationCenter.default.addObserver(self, selector: #selector(self.saveButtonStatus(sender:)), name: UITextField.textDidChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(self.saveButtonStatus(sender:)), name: UITextView.textDidChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(self.saveButtonStatus(sender:)), name: UITextField.textDidBeginEditingNotification, object: nil)
         
+        //若选中编辑任务，将选中的内容显示到输入框中
         if let taskToEdit = taskToEdit {
-            self.textField.text = taskToEdit.name
+            self.textView.text = taskToEdit.name
+            self.remindTimeField.text = taskToEdit.remindTime
             self.navigationItem.title = "编辑任务"
         }
+        //调用设置提醒时间功能
+        remindTime()
     }
     
     //设置保存按钮在文本框中无文字时不可点击
     @objc func saveButtonStatus(sender: NSNotification){
-        if(!self.textField.text!.isEmpty) {
+        if(!self.textView.text!.isEmpty || !self.remindTimeField.text!.isEmpty) {
             saveButton.isEnabled = true
         } else {
             saveButton.isEnabled = false
@@ -50,22 +69,41 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
     //使输入框首先响应 实现点击添加按钮之后跳转到添加任务界面自动选中输入框
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        textField.becomeFirstResponder()
+        textView.becomeFirstResponder()
+    }
+    
+    func textViewConfig() {
+        //设置内容是否可选
+        textView.isSelectable = true
+        //设置字体
+        textView.font = UIFont.boldSystemFont(ofSize: 20)
+        //设置字体颜色
+        textView.textColor = UIColor.gray
+        //设置对其方式
+        textView.textAlignment = NSTextAlignment.center
+        //给文本中所有的电话和网址自动添加链接
+        textView.dataDetectorTypes = UIDataDetectorTypes.all
     }
     
     //保存按钮
     @IBAction func save(_ sender: Any) {
         if let taskDetailDelegate = taskDetailDelegate {
-            if let taskToEdit = taskToEdit {
-                taskToEdit.name = textField.text!
-                taskDetailDelegate.taskDetailViewController(controller: self, didFinishEditTask: taskToEdit)
+            if var taskToEdit = taskToEdit {
+                let oldTask = taskToEdit
+                taskToEdit.name = textView.text!
+                taskToEdit.remindTime = remindTimeField.text!
+                taskDetailDelegate.taskDetailEdit(didFinishEditTask: taskToEdit, shouldDeleteTask: oldTask)
             } else {
-                if let name = textField.text {
-                    taskDetailDelegate.taskDetailViewController(controller: self, didFinishAddTask: Task(name))
+                if let name = textView.text, let time = remindTimeField.text {
+                    taskDetailDelegate.taskDetailAdd(didFinishAddTask: Task(name: name, isCheck: false, taskCategory: taskCategory!.name, remindTime: time))
                 }
-                
             }
         }
+        
+        if timeSwitch.isOn {
+            remindTask()
+        }
+        
         dismiss(animated: true, completion: nil)
     }
     
@@ -73,22 +111,134 @@ class TaskDetailViewController: UITableViewController,UITextFieldDelegate {
     @IBAction func cancel(_ sender: UIBarButtonItem) {
         dismiss(animated: true, completion: nil)
     }
+}
+
+extension TaskDetailViewController {
+    //插入的图片附件的尺寸样式
+    enum ImageAttachmentMode {
+        case `default`  //默认（不改变大小）
+        case fitTextLine  //使尺寸适应行高
+        case fitTextView  //使尺寸适应textView
+    }
     
-//    //设置tableView的行 选中效果消失（背景色消失）
-//    override func tableView(_ tableView: UITableView, willSelectRowAt indexPath: IndexPath) -> IndexPath? {
-//        return nil
-//    }
+    //插入文字
+    func insertString(_ text:String) {
+        //获取textView的所有文本，转成可变的文本
+        let mutableStr = NSMutableAttributedString(attributedString: textView.attributedText)
+        //获得目前光标的位置
+        let selectedRange = textView.selectedRange
+        //插入文字
+        let attStr = NSAttributedString(string: text)
+        mutableStr.insert(attStr, at: selectedRange.location)
+        
+        //设置可变文本的字体属性
+        mutableStr.addAttribute(NSAttributedString.Key.font, value: UIFont.systemFont(ofSize: 22),
+                                range: NSMakeRange(0,mutableStr.length))
+        //再次记住新的光标的位置
+        let newSelectedRange = NSMakeRange(selectedRange.location + attStr.length, 0)
+        
+        //重新给文本赋值
+        textView.attributedText = mutableStr
+        //恢复光标的位置（上面一句代码执行之后，光标会移到最后面）
+        textView.selectedRange = newSelectedRange
+    }
     
-//    //设置保存按钮在文本框中无文字时不可点击  使用代理模式完成
-//    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-//        let oldText = NSString (string: textField.text!)
-//        let newText = oldText.replacingCharacters(in: range, with: string) as NSString
-//
-//        if newText.length > 0 {
-//            saveButton.isEnabled = true
-//        }else {
-//            saveButton.isEnabled = false
-//        }
-//        return true
-//    }
+    func insertImage(_ image: UIImage, mode: ImageAttachmentMode = .default) {
+        //获取textview的所有文本，转化为可变文本
+        let mutableStr = NSMutableAttributedString(attributedString: textView.attributedText)
+        
+        //创建附件
+        let imgAttachment = NSTextAttachment(data: nil, ofType: nil)
+        
+        //设置附件的照片
+        imgAttachment.image = image
+        
+        if mode == .fitTextLine {
+            imgAttachment.bounds = CGRect(x: 0, y: -4, width: textView.font!.lineHeight, height: textView.font!.lineHeight)
+        } else if mode == .fitTextView {
+            let imageWidth = textView.frame.width - 10
+            let imageHeight = image.size.height/image.size.width*imageWidth
+            imgAttachment.bounds = CGRect(x: 0, y: 0, width: imageWidth, height: imageHeight)
+        }
+        
+        //创建NSAttributedString属性化文本
+        var imgAttachmentString: NSAttributedString
+        //将附件转化问此文本
+        imgAttachmentString = NSAttributedString(attachment: imgAttachment)
+        
+        //获得目前光标的位置
+        let selectedRange = textView.selectedRange
+        //插入图片
+        mutableStr.insert(imgAttachmentString, at: selectedRange.location)
+        //设置可变文本的字体属性
+        mutableStr.addAttribute(NSAttributedString.Key.font, value: UIFont.systemFont(ofSize: 22),
+                                range: NSMakeRange(0,mutableStr.length))
+        //再次记住新的光标的位置
+        let newSelectedRange = NSMakeRange(selectedRange.location+1, 0)
+        
+        //重新给文本赋值
+        textView.attributedText = mutableStr
+        //恢复光标的位置（上面一句代码执行之后，光标会移到最后面）
+        textView.selectedRange = newSelectedRange
+        //移动滚动条（确保光标在可视区域内）
+        self.textView.scrollRangeToVisible(newSelectedRange)
+        
+    }
+}
+
+extension TaskDetailViewController {
+    //设置提醒时间
+    func remindTime() {
+        timeSwitch.addTarget(self, action: #selector(switchDidChange), for:.valueChanged)
+        //创建日期选择器
+        let datePicker = UIDatePicker(frame: CGRect(x:0, y:0, width:320, height:216))
+        //将日期选择器区域设置为中文，则选择器日期显示为中文
+        datePicker.locale = Locale(identifier: "zh_CN")
+        remindTimeField.inputView = datePicker
+        datePicker.addTarget(self, action: #selector(dateChanged),
+                             for: .valueChanged)
+    }
+    
+    //日期选择器响应方法
+    @objc func dateChanged(datePicker : UIDatePicker){
+        //更新提醒时间文本框
+        let formatter = DateFormatter()
+        //日期样式
+        formatter.dateFormat = "yyyy年MM月dd日 HH:mm"
+        remindTimeField.text = formatter.string(from: datePicker.date)
+        
+        //获取当前的Calendar(用于作为转换Date和DateComponents的桥梁)
+        let calendar = Calendar.current
+        
+        components = calendar.dateComponents([Calendar.Component.year,Calendar.Component.month,Calendar.Component.day,Calendar.Component.hour,Calendar.Component.minute], from: datePicker.date)
+    }
+    
+    //UISwitch监听方法
+    @objc func switchDidChange() {
+        if timeSwitch.isOn {
+            remindTimeField.isEnabled = true
+        } else {
+            remindTimeField.isEnabled = false
+        }
+    }
+    
+    func remindTask() {
+        //设置推送内容
+        let content = UNMutableNotificationContent()
+        content.title = "任务提醒"
+        content.body = textView.text
+        //设置通知触发器
+        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+        //设置请求标识符
+        let requestIdentifier = textView.text!
+        //设置一个通知请求
+        let request = UNNotificationRequest(identifier: requestIdentifier,
+                                            content: content, trigger: trigger)
+        //将通知请求添加到发送中心
+        UNUserNotificationCenter.current().add(request) { error in
+            if error == nil {
+                print("Time Interval Notification scheduled: \(requestIdentifier)")
+            }
+        }
+    }
 }
